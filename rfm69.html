@@ -1,0 +1,96 @@
+<script type="text/x-red" data-template-name="rfm69-in">
+    <div class="form-row">
+        <label for="node-input-radio"><i class="fa fa-globe"></i> Radio</label>
+        <input type="text" id="node-input-radio">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="rfm69-in">
+    <p>A node to input data from RFM69 radios.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('rfm69-in',{
+        category: 'rfm69',
+        color: '#d8bfd8',
+        defaults: {
+            radio: {type:"rfm69-radio", required:true},
+            name: {value:""}
+        },
+        inputs:0,
+        outputs:1,
+        icon: "bridge.png",
+        label: function() {
+            return this.name||"rfm69 in";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="rfm69-out">
+    <div class="form-row">
+        <label for="node-input-radio"><i class="fa fa-globe"></i> Radio</label>
+        <input type="text" id="node-input-radio">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="rfm69-out">
+    <p>A node to output data to RFM69 radios.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('rfm69-out',{
+        category: 'rfm69',
+        color: '#d8bfd8',
+        defaults: {
+            radio: {type:"rfm69-radio", required:true},
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:0,
+        icon: "bridge.png",
+        label: function() {
+            return this.name||"rfm69 out";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="rfm69-radio">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-spiBus"><i class="fa fa-globe"></i> SPI Bus</label>
+        <input type="text" id="node-config-input-spiBus" placeholder="0" style="width:55px">
+        <label for="node-config-input-spiDevice"><i class="fa fa-globe"></i> SPI Device</label>
+        <input type="text" id="node-config-input-spiDevice" placeholder="0" style="width:55px">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="rfm69-radio">
+    <p>SPI etc.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('rfm69-radio',{
+        category: 'config',
+        defaults: {
+            name: {value:""},
+            spiBus: {value:0,validate:RED.validators.number(),required: true},
+            spiDevice: {value:0,validate:RED.validators.number(),required: true},
+         
+        },
+        label: function() {
+            return this.name;
+        },
+    });
+</script>
