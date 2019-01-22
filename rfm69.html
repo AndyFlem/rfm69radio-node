@@ -10,7 +10,20 @@
 </script>
 
 <script type="text/x-red" data-help-name="rfm69-in">
-    <p>A node to input data from RFM69 radios.</p>
+    <p>Connects to an RFM69 radio on a Raspberry Pi to receive packets.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+       <dt>payload <span class="property-type">string</span></dt>
+       <dd> The data received.</dd>
+       <dt>payloadBuffer <span class="property-type">char array</span></dt>
+       <dd> The data received.</dd>
+    </dl>
+    <h3>Details</h3>
+    <code>msg.payload</code> holds the received data.
+    <p>Payloads over 61 byyes will be truncated.</p>
+    <p>This node requires a connection to a Radio to be configured. This is configured by clicking
+    the pencil icon.</p>
+    <p>Several RFM69 nodes (in or out) share the same Radio connection.</p>
 </script>
 
 <script type="text/javascript">
@@ -39,10 +52,34 @@
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+    <div class="form-row">
+        <label for="node-input-toAddress"><i class="fa fa-tag"></i> To Address</label>
+        <input type="text" id="node-input-toAddress" style="width:250px" placeholder="255 for broadcast">
+    </div>
+    <div class="form-row">
+        <label for="node-input-attempts"><i class="fa fa-tag"></i> Retry Attempts</label>
+        <input type="text" id="node-input-attempts" style="width:250px" placeholder="3">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="rfm69-out">
-    <p>A node to output data to RFM69 radios.</p>
+    <p>Connects to an RFM69 radio on a Raspberry Pi to send packets.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+       <dt>payload <span class="property-type">string</span></dt>
+       <dd> The packet payload to be sent. Maximum 61 bytes in length.</dd>
+       <dt> to address <span class="property-type">number</span></dt>
+       <dd> The address that packets sent from this node are addressed to. Set to 255 for broadcasts.</dd>
+       <dt> retry attempts <span class="property-type">number</span></dt>
+       <dd> The number of sends (waiting for an 'ack') before giving up.</dd>
+    </dl>
+    <h3>Details</h3>
+    <code>msg.payload</code> is used as the payload of the packet sent.
+    If it contains an Object or byte array it will be converted to a JSON string before being sent.</p>
+    <p>Payloads over 61 byyes will be truncated.</p>
+    <p>This node requires a connection to a Radio to be configured. This is configured by clicking
+    the pencil icon.</p>
+    <p>Several RFM69 nodes (in or out) share the same Radio connection.</p>
 </script>
 
 <script type="text/javascript">
@@ -51,7 +88,9 @@
         color: '#d8bfd8',
         defaults: {
             radio: {type:"rfm69-radio", required:true},
-            name: {value:""}
+            name: {value:""},
+            toAddress: {value:255,validate:RED.validators.number()},
+            attempts: {value:3,validate:RED.validators.number()},
         },
         inputs:1,
         outputs:0,
@@ -71,13 +110,75 @@
     <div class="form-row">
         <label for="node-config-input-spiBus"><i class="fa fa-globe"></i> SPI Bus</label>
         <input type="text" id="node-config-input-spiBus" placeholder="0" style="width:55px">
-        <label for="node-config-input-spiDevice"><i class="fa fa-globe"></i> SPI Device</label>
+        <label style="padding-left:30px;" for="node-config-input-spiDevice"> SPI Device</label>
         <input type="text" id="node-config-input-spiDevice" placeholder="0" style="width:55px">
     </div>
+    <div class="form-row">
+        <label for="node-config-input-address"><i class="fa fa-address-book-o"></i> Address</label>
+        <input type="text" id="node-config-input-address" placeholder="1" style="width:55px">
+        <label style="padding-left:30px;" for="node-config-input-networkID"> Network</label>
+        <input type="text" id="node-config-input-networkID" placeholder="100" style="width:55px">
+    </div>
+    <div class="form-row">
+        <label style="width: 200px;" for="node-config-input-powerLevelPercent"><i class="fa fa-battery"></i> Power Level %</label>
+        <input type="text" id="node-config-input-powerLevelPercent" placeholder="70" style="width:55px">
+    </div>
+    <div class="form-row">
+        <label style="width: 200px;" for="node-config-input-interruptPin"><i class="fa fa-dot-circle-o"></i> Interrupt Pin</label>
+        <input type="text" id="node-config-input-interruptPin" placeholder="24" style="width:55px">
+    </div>
+    <div class="form-row">
+        <label style="width: 200px;" for="node-config-input-resetPin"><i class="fa fa-dot-circle-o"></i> Reset Pin</label>
+        <input type="text" id="node-config-input-resetPin" placeholder="5" style="width:55px">
+    </div>
+    <div class="form-row">
+        <label style="width: 200px;" for="node-config-input-encryptionKey"><i class="fa fa-key"></i> Encryption Key</label>
+        <input type="text" id="node-config-input-encryptionKey" style="width:150px">
+    </div>
+    <div class="form-row">
+            <input type="checkbox" id="node-config-input-isRFM69HW" style="width:55px">
+            <label style="width:200px" for="node-config-input-isRFM69HW"> Highpowered Radio?</label>
+    </div>
+    <div class="form-row">
+            <input type="checkbox" id="node-config-input-promiscuousMode" style="width:55px">
+            <label style="width:200px" for="node-config-input-promiscuousMode"> Promiscous Mode?</label>
+    </div>    
+    <div class="form-row">
+        <input type="checkbox" id="node-config-input-autoAcknowledge" style="width:55px">
+        <label style="width:200px" for="node-config-input-autoAcknowledge"> Auto Acknowledge?</label>
+    </div>
+    
+    
 </script>
 
 <script type="text/x-red" data-help-name="rfm69-radio">
-    <p>SPI etc.</p>
+    <p>Connects to an RFM69 radio on a Raspberry Pi to send and receive packets.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+       <dt>SPI Bus <span class="property-type">number</span></dt>
+       <dd> The SPI Bus number. Usually 0.</dd>
+       <dt>SPI Device <span class="property-type">number</span></dt>
+       <dd> The SPI Device number. Usually 0.</dd>
+       <dt>Address <span class="property-type">number</span></dt>
+       <dd> The address for this radio, should be unique on the network. </dd>
+       <dt>Network ID <span class="property-type">number</span></dt>
+       <dd> ID for the network used in addressing. Usually 100.</dd>
+       <dt>Power Level <span class="property-type">number</span></dt>
+       <dd> Power level for the radio in percent. Between 20 and 100.</dd>
+       <dt>Interrupt Pin <span class="property-type">number</span></dt>
+       <dd> Raspberry Pi pin number connected to the radio Interrupt pin. Default 24.</dd>
+       <dt>Reset Pin <span class="property-type">number</span></dt>
+       <dd> Raspberry Pi pin number connected to the radio Reset pin. Default 5.</dd>
+       <dt>Encryption Key <span class="property-type">string</span></dt>
+       <dd> Leave blank for no encryption. Must be 16 chars to be used as the key. The same key must be used on all radios in the network.</dd>
+       <dt>Highpowered Radio? <span class="property-type">yes / no</span></dt>
+       <dd> Must be checked for RFM69HCW and RFM69HW.</dd>
+       <dt>Promiscuous Mode? <span class="property-type">yes / no</span></dt>
+       <dd> Check to receive all packets irrespective of address.</dd>
+       <dt>Auto Acknowledge? <span class="property-type">yes / no</span></dt>
+       <dd> Check to send 'ack' packet for all received packets.</dd>
+
+    </dl>
 </script>
 
 <script type="text/javascript">
@@ -85,9 +186,17 @@
         category: 'config',
         defaults: {
             name: {value:""},
-            spiBus: {value:0,validate:RED.validators.number(),required: true},
-            spiDevice: {value:0,validate:RED.validators.number(),required: true},
-         
+            spiBus: {value:0,validate:RED.validators.number()},
+            spiDevice: {value:0,validate:RED.validators.number()},
+            address: {value:1,validate:RED.validators.number()},
+            networkID: {value:100,validate:RED.validators.number()},
+            isRFM69HW: {value: true},
+            powerLevelPercent: {value:70,validate:RED.validators.number()},
+            interruptPin: {value:24,validate:RED.validators.number()},
+            resetPin: {value:5,validate:RED.validators.number()},
+            promiscuousMode: {value: false},
+            encryptionKey: {},
+            autoAcknowledge: {value: true},
         },
         label: function() {
             return this.name;
