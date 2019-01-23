@@ -5,40 +5,56 @@ module.exports = function(RED) {
 
   function RFM69In(config) {
     RED.nodes.createNode(this,config);
-    var node = this;
+    var nodeIn = this;
 
-    node.radio_node=RED.nodes.getNode(config.radio);
-    var radio=node.radio_node.radio;
+    nodeIn.status({fill:"red",shape:"ring",text:"disconnected"});
+
+    nodeIn.radio_node=RED.nodes.getNode(config.radio);
+    var radio=nodeIn.radio_node.radio;
+    nodeIn.radio_node.register(nodeIn);
 
     radio.registerPacketReceivedCallback(function(packet){
-      node.send(packet);
+      nodeIn.send(packet);
+    });
+    nodeIn.on('close', function() {
+      nodeIn.radio_node.deregister(nodeIn);
     });      
   }
   RED.nodes.registerType("rfm69-in",RFM69In);
 
   function RFM69Out(config) {
     RED.nodes.createNode(this,config);
-    var node = this;
+    var nodeOut = this;
     
-    node.radio_node=RED.nodes.getNode(config.radio);
-    var radio=node.radio_node.radio;
+    nodeOut.status({fill:"red",shape:"ring",text:"disconnected"});
 
-    node.toAddress=numberOrDefault(config.toAddress, 255);
-    node.attempts=numberOrDefault(config.attempts, 3);
+    nodeOut.radio_node=RED.nodes.getNode(config.radio);
+    var radio=nodeOut.radio_node.radio;
 
-    node.on('input', function(msg) {
-      if (node.toAddress === 255){
+    nodeOut.radio_node.register(nodeOut);
+
+    nodeOut.toAddress=numberOrDefault(config.toAddress, 255);
+    nodeOut.attempts=numberOrDefault(config.attempts, 3);
+
+    nodeOut.on('input', function(msg) {
+      if (nodeOut.toAddress === 255){
         radio.broadcast(msg.payload)
         .catch(err=>this.error(`Error sending packet.  (${err})`));
       } else {
-        radio.send({toAddress: node.toAddress, attempts: node.attempts, payload: msg.payload})
+        radio.send({toAddress: nodeOut.toAddress, attempts: nodeOut.attempts, payload: msg.payload})
         .catch(err=>this.error(`Error sending packet.  (${err})`));
       }      
     });
+    nodeOut.on('close', function() {
+      nodeOut.radio_node.deregister(nodeOut);
+    });      
+
   }
   RED.nodes.registerType("rfm69-out",RFM69Out);
 
   function RFM69Radio(config) {
+    this.users = {};
+
     RED.nodes.createNode(this,config);
     
     this.radio = new RFM69RADIO();
@@ -82,9 +98,26 @@ module.exports = function(RED) {
       verbose:false,
     }
 
+    var self=this;
+
     this.radio.initialize(setup)
+    .then(()=>{
+      for (var id in self.users) {
+        if (self.users.hasOwnProperty(id)) {
+            self.users[id].status({fill:"green",shape:"dot",text:"node-red:common.status.connected"});
+        }
+      }
+    })
     .catch(err=>this.error(`Error connecting to rfm69 radio. Check your wiring, SPI bus and device numbers and pin settings. (${err})`));
 
+    
+    
+    self.register = function(rfm69Node) {
+      self.users[rfm69Node.id] = rfm69Node;
+    }
+    self.deregister = function(rfm69Node) {
+      delete self.users[rfm69Node.id];
+    }
     
   }
   RED.nodes.registerType("rfm69-radio",RFM69Radio);
