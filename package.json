@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-rfm69radio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Node-Red node for sending and receiving through RFM69 radios on the Raspberry Pi.",
   "homepage": "https://github.com/AndyFlem/rfm69radio-node",
   "main": "index.js",
@@ -10,6 +10,13 @@
   },
   "author": "Andy Fleming",
   "license": "GPL-3.0-or-later",
+  "node-red": {
+    "nodes": {
+      "rfm69-in": "rfm69.js",
+      "rfm69-out": "rfm69.js",
+      "rfm69-radio": "rfm69.js"
+    }
+  },
   "keywords": [
     "node-red",
     "HopeRF",
